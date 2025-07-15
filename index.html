@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Multi-Step Registration</title>
+  <style>
+    :root {
+      --dark-teal: #264653;
+      --mint-green: #2445a9ff;
+      --soft-yellow: #e9c46a;
+      --warm-orange: #f4a261;
+      --terracotta: #e76f51;
+      --white: #ffffff;
+      --light-gray: #f8f9fa;
+      --input-bg: #f1f1f1;
+      --text-color: #333333;
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(-45deg, var(--dark-teal), var(--mint-green), var(--soft-yellow));
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .form-container {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--dark-teal);
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    label {
+      display: block;
+      margin-top: 0.5rem;
+      font-weight: bold;
+      color: var(--dark-teal);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    select,
+    input[type="file"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.3rem;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      background-color: var(--terracotta);
+      color: var(--white);
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: var(--warm-orange);
+    }
+
+    .password-strength {
+      margin-top: 0.5rem;
+      height: 6px;
+      background-color: #ddd;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .strength-bar {
+      height: 100%;
+      width: 0%;
+      background-color: red;
+      transition: width 0.3s, background-color 0.3s;
+    }
+
+    .password-hint {
+      margin-top: 0.3rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .match-status {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    .match {
+      color: green;
+    }
+
+    .mismatch {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>Register</h2>
+
+    <!-- Step 1 -->
+    <div id="step1" class="step active">
+      <label for="fullName">Full Name</label>
+      <input type="text" id="fullName" placeholder="John Doe" />
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" />
+
+      <label for="gender">Gender</label>
+      <select id="gender">
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+        <option value="prefer_not">Prefer not to say</option>
+      </select>
+
+      <label for="profilePic">Profile Picture</label>
+      <input type="file" id="profilePic" accept="image/*" />
+
+      <button onclick="nextStep()">Next</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="step2" class="step">
+      <label for="password">Create Password</label>
+      <input type="password" id="password" placeholder="Enter password" oninput="checkPasswordStrength()" />
+
+      <div class="password-strength">
+        <div class="strength-bar" id="strengthBar"></div>
+      </div>
+      <div class="password-hint" id="passwordHint"></div>
+
+      <label for="confirmPassword">Confirm Password</label>
+      <input type="password" id="confirmPassword" placeholder="Re-enter password" oninput="checkPasswordMatch()" />
+
+      <div class="match-status" id="matchStatus"></div>
+
+      <button onclick="submitForm()">Submit</button>
+    </div>
+  </div>
+
+  <script>
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+
+    function nextStep() {
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const dob = document.getElementById('dob').value;
+      const gender = document.getElementById('gender').value;
+      const profilePic = document.getElementById('profilePic').files[0];
+
+      if (!fullName || !email || !dob || !gender) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      // Store values in localStorage or pass via state if needed
+      localStorage.setItem('fullName', fullName);
+      localStorage.setItem('email', email);
+      localStorage.setItem('dob', dob);
+      localStorage.setItem('gender', gender);
+      if (profilePic) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          localStorage.setItem('profilePic', reader.result);
+        };
+        reader.readAsDataURL(profilePic);
+      }
+
+      step1.classList.remove('active');
+      step2.classList.add('active');
+    }
+
+    function checkPasswordStrength() {
+      const password = document.getElementById('password').value;
+      const strengthBar = document.getElementById('strengthBar');
+      const hint = document.getElementById('passwordHint');
+
+      let strength = 'weak';
+
+      if (password.length < 6) {
+        strength = 'weak';
+        hint.textContent = "Weak: Too short.";
+        hint.className = "password-hint";
+      } else if (
+        password.match(/^(?=.*[A-Za-z])(?=.*\d).{6,}$/)
+      ) {
+        strength = 'medium';
+        hint.textContent = "Medium: Add special character.";
+        hint.className = "password-hint";
+      } else if (
+        password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@!#%&]).{7,}$/)
+      ) {
+        strength = 'strong';
+        hint.textContent = "Strong password!";
+        hint.className = "password-hint match";
+      } else {
+        strength = 'medium';
+        hint.textContent = "Improve by adding uppercase and special chars.";
+        hint.className = "password-hint mismatch";
+      }
+
+      let width = 0;
+      let color = '#e76f51';
+
+      if (strength === 'weak') {
+        width = 33;
+        color = '#e76f51';
+      } else if (strength === 'medium') {
+        width = 66;
+        color = '#f4a261';
+      } else if (strength === 'strong') {
+        width = 100;
+        color = '#2a9d8f';
+      }
+
+      strengthBar.style.width = width + '%';
+      strengthBar.style.backgroundColor = color;
+    }
+
+    function checkPasswordMatch() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const status = document.getElementById('matchStatus');
+
+      if (password === confirmPassword && password !== '') {
+        status.textContent = "Passwords match!";
+        status.className = "match-status match";
+      } else if (password !== confirmPassword && confirmPassword !== '') {
+        status.textContent = "Passwords do not match!";
+        status.className = "match-status mismatch";
+      } else {
+        status.textContent = "";
+      }
+    }
+
+    function submitForm() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      if (!password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@!#%&]).{7,}$/)) {
+        alert("Password does not meet the strong criteria!");
+        return;
+      }
+
+      // Simulate success
+      alert("Registration successful!");
+      console.log("User Data:", {
+        fullName: localStorage.getItem('fullName'),
+        email: localStorage.getItem('email'),
+        dob: localStorage.getItem('dob'),
+        gender: localStorage.getItem('gender'),
+        profilePic: localStorage.getItem('profilePic') ? "Uploaded" : "Not uploaded",
+        password: "******"
+      });
+
+      // Optionally clear localStorage after submission
+      localStorage.clear();
+    }
+  </script>
+</body>
+</html>
